@@ -1,0 +1,100 @@
+# Default values for production environment.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+imagePullSecrets:
+  - name: zinza-registry
+
+application:
+  # name: $CI_ENVIRONMENT_NAME
+  tier: socket
+  env:
+    - name: MONGODB_URI
+      value: 'mongodb://localhost:27017/'
+    - name: REDIS_HOST
+      value: 'staging-redis-ha-master-svc'
+    - name: REDIS_GENKEY_HOST
+      value: 'genkey'
+    - name: REDIS_SENTINEL_O
+      value: 'staging-redis-ha-server-0.staging-redis-ha.sample'
+    - name: REDIS_SENTINEL_1
+      value: 'staging-redis-ha-server-1.staging-redis-ha.sample'
+    - name: REDIS_SENTINEL_2
+      value: 'staging-redis-ha-server-2.staging-redis-ha.sample'
+    - name: REDIS_SENTINEL_PORT
+      value: '26379'
+    - name: REDIS_MASTER_GROUP_NAME
+      value: 'mymaster'
+    - name: REDIS_HOST1
+      value: 'staging1-redis-ha1-master-svc'
+    - name: REDIS_SENTINEL_O1
+      value: 'staging1-redis-ha1-server-0.staging1-redis-ha1.sample'
+    - name: REDIS_SENTINEL_11
+      value: 'staging1-redis-ha1-server-1.staging1-redis-ha1.sample'
+    - name: REDIS_SENTINEL_21
+      value: 'staging1-redis-ha1-server-2.staging1-redis-ha1.sample'
+    - name: REDIS_SENTINEL_PORT1
+      value: '26379'
+    - name: REDIS_MASTER_GROUP_NAME1
+      value: 'mymaster1'
+    - name: REDIS_HOST2
+      value: 'staging2-redis-ha2-master-svc'
+    - name: REDIS_SENTINEL_O2
+      value: 'staging2-redis-ha2-server-0.staging2-redis-ha2.sample'
+    - name: REDIS_SENTINEL_12
+      value: 'staging2-redis-ha2-server-1.staging2-redis-ha2.sample'
+    - name: REDIS_SENTINEL_22
+      value: 'staging2-redis-ha2-server-2.staging2-redis-ha2.sample'
+    - name: REDIS_SENTINEL_PORT2
+      value: '26379'
+    - name: REDIS_MASTER_GROUP_NAME2
+      value: 'mymaster2'
+    - name: REDIS_HOST_PUBSUB
+      value: 'pubsub-redis-ha-pubsub-master-svc'
+    - name: REDIS_SENTINEL_PUBSUB_O
+      value: 'pubsub-redis-ha-pubsub-server-0.pubsub-redis-ha-pubsub.sample'
+    - name: REDIS_SENTINEL_PUBSUB_1
+      value: 'pubsub-redis-ha-pubsub-server-1.pubsub-redis-ha-pubsub.sample'
+    - name: REDIS_SENTINEL_PUBSUB_2
+      value: 'pubsub-redis-ha-pubsub-server-2.pubsub-redis-ha-pubsub.sample'
+    - name: REDIS_SENTINEL_PORT_PUBSUB
+      value: '26379'
+    - name: REDIS_MASTER_GROUP_NAME_PUBSUB
+      value: 'mymasterpubsub'
+    - name: REDIS_HOST_PUBSUB1
+      value: 'pubsub1-redis-ha1-pubsub1-master-svc'
+    - name: REDIS_SENTINEL_PUBSUB_O1
+      value: 'pubsub1-redis-ha-pubsub1-server-0.pubsub1-redis-ha-pubsub1.sample'
+    - name: REDIS_SENTINEL_PUBSUB_11
+      value: 'pubsub1-redis-ha-pubsub1-server-1.pubsub1-redis-ha-pubsub1.sample'
+    - name: REDIS_SENTINEL_PUBSUB_21
+      value: 'pubsub1-redis-ha-pubsub1-server-2.pubsub1-redis-ha-pubsub1.sample'
+    - name: REDIS_SENTINEL_PORT_PUBSUB1
+      value: '26379'
+    - name: REDIS_MASTER_GROUP_NAME_PUBSUB1
+      value: 'mymasterpubsub1'
+    - name: PORT
+      value: "3000"
+    - name: NODE_ENV
+      value: "staging"
+
+  affinity: |
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: message/app
+            operator: In
+            values:
+            - socket
+  configDB: config/mongo-config-0.mongo-config.sample:27017,mongo-config-1.mongo-config.sample:27017,mongo-config-2.mongo-config.sample:27017"
+
+service:
+  enabled: true
+  name: socket
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 3000
+  url: sample.zinza.com.vn
+  ssl: zinza-ssl

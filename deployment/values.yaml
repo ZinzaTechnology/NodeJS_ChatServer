@@ -1,0 +1,25 @@
+replicaCount: 1
+image:
+  repository: ""
+  tag: latest
+  pullPolicy: Always
+mongo:
+  image:
+    repository: mongo
+    tag: 4.0
+
+
+service:
+  enabled: true
+  name: socket-staging
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 3000
+  url: Sampleprod.zinza.com.vn
+resources:
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi

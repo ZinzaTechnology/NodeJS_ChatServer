@@ -1,0 +1,685 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Socket Server
+  description: API for web socket server
+  contact:
+    name: Quan
+    email: quan@zinza.com.vn
+host: 10.0.0.115:3000
+basePath: /
+schemes:
+  - http
+consumes:
+  - application/json
+  - application/x-www-form-urlencoded
+produces:
+  - application/json
+
+parameters:
+  x-localization:
+    in: header
+    name: x-localization
+    required: true
+    type: string
+    description: Language of device
+
+  authorization:
+    in: header
+    name: Authorization
+    required: true
+    type: string
+    description: Bearer Token.
+
+  did:
+    in: header
+    name: deviceid
+    required: true
+    type: string
+    description: Device ID
+
+  sn:
+    in: header
+    name: sn
+    required: true
+    type: string
+    description: Sample number
+
+definitions:
+  Error:
+    type: object
+    example: { error: "Error" }
+    properties:
+      error:
+        type: string
+
+  User:
+    type: object
+    example:
+      {
+        "_id": "141129942032187396",
+        "sn": 13282638,
+        "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+        "token": "$2a$05$xHJo1gStrRf4JWt4zMHGhO/f6Ws.oyTFZ.4zBniNg3pWJ/xu43xRa",
+        "createdAt": "2019-10-03T10:40:00.342Z",
+        "updatedAt": "2019-10-03T10:40:00.342Z",
+      }
+    required:
+      - _id
+      - sn
+      - token
+      - createAt
+      - updateAt
+    properties:
+      _id:
+        type: string
+      sn:
+        type: number
+      name:
+        type: string
+      did:
+        type: string
+      token:
+        type: string
+      la:
+        type: string
+        format: date-time
+      createAt:
+        type: string
+        format: date-time
+      updateAt:
+        type: string
+        format: date-time
+
+  Message:
+    type: object
+    example:
+      {
+        "ss": false,
+        "_id": "141391562817929218",
+        "cid": "141391526054854657",
+        "body": "Hi",
+        "au": "141391394433400836",
+        "re": 51671681,
+        "sa": "2019-10-04T03:59:35.504Z",
+        "createdAt": "2019-10-04T03:59:35.521Z",
+        "updatedAt": "2019-10-04T03:59:35.521Z",
+      }
+    properties:
+      _id:
+        type: number
+      cid:
+        type: number
+      body:
+        type: string
+      au:
+        type: string
+      re:
+        type: number
+      ss:
+        type: boolean
+      sa:
+        type: string
+        format: date-time
+
+  Conversation:
+    type: object
+    example:
+      {
+        "par": ["141391440981786629", "141391394433400836"],
+        "_id": "141391526054854657",
+        "lm":
+          {
+            "_id": "141391562817929218",
+            "body": "Hi",
+            "au": "141391394433400836",
+            "ausn": 18172117,
+          },
+        "updatedAt": "2019-10-04T03:59:35.524Z",
+        "createdAt": "2019-10-04T03:59:26.785Z",
+      }
+    properties:
+      _id:
+        type: number
+      par:
+        type: array
+        items:
+          type: string
+      lm:
+        type: string
+        items:
+          type: object
+          properties:
+            _id:
+              type: string
+            body:
+              type: string
+            au:
+              type: string
+            ausn:
+              type: string
+      war:
+        type: boolean
+paths:
+  /:
+    get:
+      summary: Check Liveness server
+      parameters:
+        - $ref: "#/parameters/authorization"
+      responses:
+        200:
+          description: OK
+
+  /healthz:
+    get:
+      summary: Check Readiness server
+      parameters:
+        - $ref: "#/parameters/authorization"
+      responses:
+        200:
+          description: OK
+        503:
+          description: SERVICE UNAVAILABLE
+
+  /api/v1/auth/register:
+    post:
+      summary: REGISTER NEW Sample NUMBER
+      produces:
+        - application/json
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - in: body
+          name: DeviceID
+          schema:
+            type: object
+            example:
+              {
+                did: "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+                captcha: "captcha",
+              }
+            required:
+              - did
+              - captcha
+      responses:
+        201:
+          description: create new Number
+          schema:
+            type: object
+            example:
+              {
+                user:
+                  {
+                    "_id": "141129942032187396",
+                    "sn": 52581184,
+                    "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+                  },
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiIxNDEzNzMxNjY2MDQ3Nzk1MjEiLCJkaWQiOiI3RjVFQkJFRC0yMEIxLTQyNEMtOTZCNS00RDU5RkY3MzdDQzciLCJzbiI6NTI1ODExODQsImlhdCI6MTU3MDE1NzE4OSwiZXhwIjo2NzIwMDAwMDAwMDE1NzAwMDAwMDB9.biVIF7xE4UBtHFYk9OImHZ5WuEwc_qfI5C856n-O3qw",
+              }
+            properties:
+              user:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  sn:
+                    type: number
+                  did:
+                    type: string
+              token:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user:
+    put:
+      summary: Update user info
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: body
+          name: updataeUser
+          schema:
+            type: object
+            example: { name: "Update Name" }
+            required:
+              - name
+      responses:
+        200:
+          description: Update success
+          schema:
+            type: object
+            example:
+              {
+                "_id": "141129942032187396",
+                "sn": 52581184,
+                "name": "Update Name",
+                "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+              }
+            properties:
+              _id:
+                type: string
+              sn:
+                type: number
+              name:
+                type: string
+              did:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user/{sn}:
+    get:
+      summary: Get User By Number
+      parameters:
+        - in: path
+          name: sn
+          type: integer
+          required: true
+          description: Number user
+      responses:
+        200:
+          description: OK
+          schema:
+            example: { "sn": 52581184 }
+            type: object
+            properties:
+              sn:
+                type: number
+              name:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user/reset:
+    put:
+      summary: Reset Sample number
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+      responses:
+        201:
+          description: create new Number
+          schema:
+            type: object
+            example:
+              {
+                user:
+                  {
+                    "_id": "141129942032187396",
+                    "sn": 52581184,
+                    "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+                  },
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiIxNDEzNzMxNjY2MDQ3Nzk1MjEiLCJkaWQiOiI3RjVFQkJFRC0yMEIxLTQyNEMtOTZCNS00RDU5RkY3MzdDQzciLCJzbiI6NTI1ODExODQsImlhdCI6MTU3MDE1NzE4OSwiZXhwIjo2NzIwMDAwMDAwMDE1NzAwMDAwMDB9.biVIF7xE4UBtHFYk9OImHZ5WuEwc_qfI5C856n-O3qw",
+              }
+            properties:
+              user:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  sn:
+                    type: number
+                  did:
+                    type: string
+              token:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user/delete:
+    delete:
+      summary: hash delete user
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+      responses:
+        200:
+          description: delete user
+          schema:
+            type: object
+            example: { Info: "Delete Number Success" }
+            properties:
+              Info:
+                type: string
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user/pincode:
+    put:
+      summary: set pincode
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: body
+          name: setPincode
+          schema:
+            type: object
+            example: { pincode: "1234" }
+            required:
+              - pincode
+      responses:
+        201:
+          description: create pincode
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+    post:
+      summary: post pincode
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - in: body
+          name: postPincode
+          schema:
+            type: object
+            example:
+              {
+                "sn": 52581184,
+                "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+                "pincode": "1234",
+              }
+            required:
+              - sn
+              - did
+              - pincode
+      responses:
+        200:
+          description: recover new device
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+              user:
+                type: object
+                example:
+                  {
+                    "_id": "141129942032187396",
+                    "sn": 52581184,
+                    "name": "Update Name",
+                    "did": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+                  }
+                properties:
+                  _id:
+                    type: string
+                  sn:
+                    type: number
+                  did:
+                    type: string
+                  name:
+                    type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/messages:
+    get:
+      summary: get old messages
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: query
+          name: participantsNumber
+          type: string
+          required: true
+          description: participants Number
+        - in: query
+          name: time
+          type: string
+          required: false
+          description: time message
+        - in: query
+          name: cid
+          type: string
+          required: false
+          description: conversation id
+      responses:
+        200:
+          description: Get 20 old messages
+          schema:
+            type: object
+            example:
+              {
+                "conversation":
+                  [
+                    {
+                      "ss": false,
+                      "_id": "141391562817929218",
+                      "cid": "141391526054854657",
+                      "body": "Hi",
+                      "au": { "_id": "141391394433400836", "sn": 18172117 },
+                      "re": 51671681,
+                      "sa": "2019-10-04T03:59:35.504Z",
+                    },
+                    {
+                      "ss": true,
+                      "_id": "141391526071631873",
+                      "cid": "141391526054854657",
+                      "body": "Hello",
+                      "au": { "_id": "141391440981786629", "sn": 51671681 },
+                      "re": 18172117,
+                      "sa": "2019-10-04T03:59:26.743Z",
+                    },
+                  ],
+              }
+            properties:
+              conversation:
+                type: array
+                items:
+                  $ref: "#/definitions/Message"
+
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+  /api/v1/config:
+    get:
+      summary: load config
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+      responses:
+        200:
+          description: load config success
+          schema:
+            type: object
+            example:
+              {
+                "data":
+                  {
+                    "en":
+                      {
+                        "appStoreUrl": "https://zinza.com.vn",
+                        "ADD_CONTACT_TITLE": "Add contact",
+                        "ADD_CONTACT_CONTENT": "User $Number added your Number",
+                        "INVITE_FRIEND": "[$name] [$Number] has sent you an invitation to Samplemessanger. Let's start Sample message by setting Samplemessanger to $link. Samplemessenger is a message app that allows you to start a conversation with only 8 numbers. Feel free to start a message.",
+                        "TRANSFER_CONTENT": "You can now transfer your Samplemessage friends' datas\n. Your information will be gone after 24 hours.\n Would you like to transfer?",
+                        "LINK": "DOWNLOAD",
+                        "TRANSFER_TITLE": "【24hours】",
+                      },
+                    "ja":
+                      {
+                        "appStoreUrl": "https://zinza.com.vn",
+                        "ADD_CONTACT_TITLE": "友達追加",
+                        "ADD_CONTACT_CONTENT": "$Numberがあなたを追加しました。",
+                        "INVITE_FRIEND": "$name$NumberさんからSamplemessangerへの招待が届いています。Samplemessanger を $link して、スカイメッセージを開始しましょう。Samplemessengerは8文字の数字だけで会話を開始できるメッセージアプリです。気軽にメッセージを始めることができます。",
+                        "TRANSFER_CONTENT": "ピンコードを用いて連絡先の転送が可能です。\n転送は24時間以内に行わないとデータが削除されてしまいます。\n転送を続けますか？",
+                        "LINK": "ダウンロード",
+                        "TRANSFER_TITLE": "【24時間】",
+                      },
+                  },
+              }
+            properties:
+              data:
+                type: object
+                properties:
+                  en:
+                    type: object
+                    properties:
+                      appStoreUrl:
+                        type: string
+                      ADD_CONTACT_TITLE:
+                        type: string
+                      ADD_CONTACT_CONTENT:
+                        type: string
+                      INVITE_FRIEND:
+                        type: string
+                      LINK:
+                        type: string
+                      TRANSFER_CONTENT:
+                        type: string
+                  ja:
+                    type: object
+                    properties:
+                      appStoreUrl:
+                        type: string
+                      ADD_CONTACT_TITLE:
+                        type: string
+                      ADD_CONTACT_CONTENT:
+                        type: string
+                      INVITE_FRIEND:
+                        type: string
+                      LINK:
+                        type: string
+                      TRANSFER_CONTENT:
+                        type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/user/device-token:
+    put:
+      summary: set device token
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: body
+          name: setDeviceToken
+          schema:
+            type: object
+            example:
+              {
+                "sn": 52581184,
+                "deviceToken": "7F5EBBED-20B1-424C-96B5-4D59FF737CC7",
+              }
+            required:
+              - sn
+              - deviceToken
+      responses:
+        200:
+          description: set device token
+          schema:
+            type: object
+            example: { Info: "Set device token ok" }
+            properties:
+              Info:
+                type: string
+
+  /api/v1/contact/export:
+    post:
+      summary: export contact
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: body
+          name: contact data
+          schema:
+            type: object
+            example:
+              {
+                "data": '{"0":{"Number": "99121223", "profileName": "test 04 05", "memo": ""}}',
+                "email": "quan@zinza.com.vn",
+              }
+            required:
+              - data
+              - email
+      responses:
+        200:
+          description: Send Email Contact data
+          schema:
+            type: object
+            example: { Info: "Contact is send to your email" }
+            properties:
+              Info:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Token is not valid
+          schema:
+            $ref: "#/definitions/Error"
+
+  /api/v1/contact/online:
+    post:
+      summary: check online list contact send from client
+      parameters:
+        - $ref: "#/parameters/x-localization"
+        - $ref: "#/parameters/authorization"
+        - in: body
+          name: contact data
+          schema:
+            type: object
+            example: { "data": ["12345678", "12345679"] }
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  sn:
+                    type: string
+                  isOnline:
+                    type: boolean
+            example:
+              {
+                data:
+                  [
+                    { "sn": "12345678", isOnline: true },
+                    { "sn": "12345679", isOnline: true },
+                  ],
+              }

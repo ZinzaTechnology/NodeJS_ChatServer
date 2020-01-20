@@ -1,0 +1,85 @@
+{
+  "name": "sample",
+  "version": "0.0.1",
+  "description": "",
+  "main": "bin/server",
+  "scripts": {
+    "start": "babel-node ./bin/server",
+    "dev": "nodemon ./bin/server --exec babel-node",
+    "test": "PORT=3001 mocha -t 150000 --compilers js:babel-register --exit",
+    "test-single": "PORT=3001 mocha -t 150000 --compilers js:babel-register $1 --exit",
+    "coverage": "PORT=3001 nyc --reporter=text --reporter=html --reporter=text-summary mocha -t 150000 --compilers js:babel-register --exit",
+    "docker:dev": "docker-compose up",
+    "docker:test": "docker-compose -f docker-compose.test.yml up",
+    "docker:test-single": "docker-compose -f docker-compose.test-single.yml up",
+    "docker:coverage": "docker-compose -f docker-compose.coverage.yml up"
+  },
+  "author": "Zinza",
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^0.18.0",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "nyc": "^11.8.0",
+    "sinon": "^6.0.0",
+    "socket.io-client": "^2.1.1",
+    "supertest": "^4.0.0"
+  },
+  "dependencies": {
+    "app-root-path": "^2.1.0",
+    "async": "^2.6.1",
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.18.3",
+    "connect-redis": "^3.3.3",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "express-translate": "^0.4.0",
+    "express-validator": "^6.1.1",
+    "faker": "^4.1.0",
+    "fcm-node": "^1.4.0",
+    "fs": "^0.0.1-security",
+    "ioredis": "^3.2.2",
+    "isomorphic-fetch": "^2.2.1",
+    "jsonwebtoken": "^8.2.1",
+    "mongoose": "^5.1.2",
+    "mongoose-long": "^0.2.1",
+    "morgan": "^1.9.0",
+    "node-zip": "^1.1.1",
+    "nodemailer": "^6.3.1",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
+    "prom-client": "^11.1.1",
+    "socket.io": "^2.1.1",
+    "socket.io-redis": "^5.2.0",
+    "swagger-ui-express": "^4.1.1",
+    "system-sleep": "^1.3.6",
+    "winston": "^3.0.0",
+    "yamljs": "^0.3.0"
+  },
+  "nyc": {
+    "exclude": [
+      "./config/main.js",
+      "./test",
+      "./app/controllers/onlineUser.js",
+      "./app/controllers/keyRedis.js",
+      "./app/controllers/db.js"
+    ],
+    "branches": 80,
+    "lines": 80,
+    "functions": 80,
+    "statements": 80
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "test/*",
+      "logs/*",
+      "coverage/*"
+    ]
+  }
+}

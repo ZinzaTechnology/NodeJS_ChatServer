@@ -1,0 +1,93 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: Samplemessage
+  labels:
+    app: {{ template "name" . }}
+    track: "{{ .Values.application.track }}"
+    tier: "{{ .Values.application.tier }}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      annotations:
+        security.alpha.kubernetes.io/sysctls: net.ipv4.ip_local_port_range=1024 65535
+        security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
+      labels:
+        app: {{ template "name" . }}
+        track: "{{ .Values.application.track }}"
+        tier: "{{ .Values.application.tier }}"
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 10 }}
+      {{- with .Values.application.affinity }}
+      affinity:
+  {{ tpl . $ | indent 8 }}
+      {{- end }}
+      containers:
+      - name: mongo-router
+        image: "{{ .Values.mongo.image.repository }}:{{ .Values.mongo.image.tag }}"
+        command:
+          - mongos
+        args:
+          - --port=27017
+          - --bind_ip=0.0.0.0
+          - --configdb
+          - "$(CONFIG_DB)"
+        env:
+          - name: CONFIG_DB
+            value: {{ .Values.application.configDB }}
+        ports:
+          - containerPort: 27017
+        livenessProbe:
+          exec:
+            command:
+              - mongo
+              - --eval
+              - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+        readinessProbe:
+          exec:
+            command:
+              - mongo
+              - --eval
+              - "db.adminCommand('ping')"
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+      - name: {{ template "name" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+{{ toYaml .Values.application.env | indent 12 }}
+        ports:
+        - name: "{{ .Values.service.name }}"
+          containerPort: {{ .Values.service.internalPort }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.service.internalPort }}
+          # httpGet:
+          #   path: /
+          #   port: {{ .Values.service.internalPort }}
+          initialDelaySeconds: 15
+          timeoutSeconds: 15
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.service.internalPort }}
+          # httpGet:
+          #   path: /healthz
+          #   port: {{ .Values.service.internalPort }}
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+        resources:
+{{ toYaml .Values.resources | indent 12 }}

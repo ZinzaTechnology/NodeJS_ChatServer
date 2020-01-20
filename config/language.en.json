@@ -1,0 +1,23 @@
+{
+  "USER_NOT_FOUND": "Number is not found",
+  "UNKNOW_ERROR": "Has an error occur",
+  "PINCODE_NOT_EXIST": "Does not exist PinCode",
+  "PINCODE_IS_INVALID": "Your pincode is invalid",
+  "PINCODE_IS_NOT_MATCH": "Your pincode is not match",
+  "PINCODE_CAN_NOT_SAVE": "Have an error when save pincode",
+  "NumBER_INVALID": "Number is invalid",
+  "USER_NAME_INVALID": "User name is invalid",
+  "INVALID_PARAM": "Invalid parameter , please check again",
+  "YOUR_NAME_IS_TOO_LONG": "Your name is too long!!!",
+  "DEVICE_ID_IS_INVALID": "Your DeviceId is invalid",
+  "TOKEN_NOT_VALID": "Your token is not valid now",
+  "ADD_CONTACT_TITLE": "Add contact",
+  "ADD_CONTACT_CONTENT": "User $Number added your Number",
+  "INVITE_FRIEND": "[$name] [$Number] has sent you an invitation to messanger. Let's start Sample message by setting messanger to $link. messenger is a message app that allows you to start a conversation with only 8 numbers. Feel free to start a message.",
+  "LINK": "DOWNLOAD",
+  "OLD_VERSION_CONTENT": "You can now use the latest version of messenger.\n Please download from Appstore",
+  "OLD_VERSION_TITLE": "Update your application",
+  "TRANSFER_CONTENT": "You can now transfer your message friends' datas\n. Your information will be gone after 24 hours.\n Would you like to transfer?",
+  "TRANSFER_TITLE": "【24hours】",
+  "DUPLICATE_SPAM": "Duplicate or spam"
+}

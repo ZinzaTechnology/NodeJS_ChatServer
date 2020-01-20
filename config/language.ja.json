@@ -1,0 +1,23 @@
+{
+  "USER_NOT_FOUND": "Numberが存在していません。",
+  "UNKNOW_ERROR": "エラーが発生されました。",
+  "PINCODE_NOT_EXIST": "PinCodeが存在していません。",
+  "PINCODE_IS_INVALID": "PinCodeが無効です。",
+  "PINCODE_IS_NOT_MATCH": "PinCodeが正しく入力していません。",
+  "PINCODE_CAN_NOT_SAVE": "Pincodeを保存できません。",
+  "NumBER_INVALID": "Numberが無効です。",
+  "USER_NAME_INVALID": "ユーザーIDが無効です。",
+  "INVALID_PARAM": "パラメータが無効です。もう一度ご確認ください。",
+  "YOUR_NAME_IS_TOO_LONG": "名前が長いすぎです。",
+  "DEVICE_ID_IS_INVALID": "DeviceIdが無効です。",
+  "TOKEN_NOT_VALID": "「Token」は無効です",
+  "ADD_CONTACT_TITLE": "友達追加",
+  "ADD_CONTACT_CONTENT": "$Numberがあなたを追加しました。",
+  "INVITE_FRIEND": "$name$NumberさんからSamplemessangerへの招待が届いています。Samplemessanger を $link して、スカイメッセージを開始しましょう。Samplemessengerは8文字の数字だけで会話を開始できるメッセージアプリです。気軽にメッセージを始めることができます。",
+  "LINK": "ダウンロード",
+  "OLD_VERSION_CONTENT": "Samplemessengerの最新版をご利用いただけます。\nAppstoreから最新版をダウンロードしてください。",
+  "OLD_VERSION_TITLE": "【アプリのアップデートのお知らせ】",
+  "TRANSFER_CONTENT": "ピンコードを用いて連絡先の転送が可能です。\n転送は24時間以内に行わないとデータが削除されてしまいます。\n転送を続けますか？",
+  "TRANSFER_TITLE": "【24時間】",
+  "DUPLICATE_SPAM": "Duplicate or spam"
+}

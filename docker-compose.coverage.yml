@@ -1,0 +1,112 @@
+version: "3.4"
+services:
+  socket-0:
+    hostname: socket-0
+    build: .
+    image: 
+    command: npm run coverage
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+      - cache-0
+      - cache-1
+      - cache-pubsub-0
+      - cache-pubsub-1
+    environment:
+      MONGODB_URI: "mongodb://db/messageServer"
+      REDIS_HOST: "cache-0"
+      REDIS_PORT: 6379
+      REDIS_HOST1: "cache-1"
+      REDIS_PORT1: 6379
+      REDIS_PORT2: 6379
+      REDIS_HOST_PUBSUB: "cache-pubsub-0"
+      REDIS_PORT_PUBSUB: 6379
+      REDIS_SENTINEL_PORT_PUBSUB: 26379
+      REDIS_HOST_PUBSUB1: "cache-pubsub-1"
+      REDIS_PORT_PUBSUB1: 6379
+      REDIS_SENTINEL_PORT_PUBSUB1: 26379
+      REDIS_GENKEY_HOST: "cache-0"
+      HOST_KEY: "messageServer"
+    volumes:
+      - .:/app
+    networks:
+      - messageServer
+
+  db:
+    image: mongo:4.2.0-bionic
+    ports:
+      - 27017:27017
+    networks:
+      - messageServer
+
+  cache-0:
+    image: 
+    hostname: cache-0
+    ports:
+      - 6379:6379
+    networks:
+      - messageServer
+  cache-1:
+    image: 
+    hostname: cache-1
+    ports:
+      - 6380:6379
+    networks:
+      - messageServer
+
+  cache-pubsub-0:
+    image: 
+    hostname: cache-pubsub-0
+    ports:
+      - 6382:6379
+    networks:
+      - messageServer
+  cache-pubsub-1:
+    image: 
+    hostname: cache-pubsub-1
+    ports:
+      - 6383:6379
+    networks:
+      - messageServer
+
+  sync:
+    hostname: sync-0
+    image: 
+    command: nodemon ./app/index --exec babel-node
+    depends_on:
+      - db
+      - cache-0
+      - cache-1
+    environment:
+      MONGODB_URI: "mongodb://db/messageServer"
+      REDIS_HOST: "cache-0"
+      REDIS_HOST1: "cache-1"
+      SYNC_RANGE: "1000"
+      SYNC_TIME: "100"
+      HOST_KEY: "messageServer"
+    networks:
+      - messageServer
+
+  prometheus:
+    image: prom/prometheus:master
+    volumes:
+      - .:/prometheus_data
+    networks:
+      - messageServer
+
+  gennewsn:
+    hostname: gennewsn-0
+    image: 
+    command: nodemon ./app/index --exec babel-node
+    depends_on:
+      - cache-0
+    environment:
+      REDIS_HOST: "cache-0"
+      SYNC_TIME: "100"
+      HOST_KEY: "messageServer"
+    networks:
+      - messageServer
+
+networks:
+  messageServer:

@@ -1,0 +1,29 @@
+{{- if .Values.service.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "name" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version| replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "md5"
+spec:
+  rules:
+  - host: {{ .Values.service.url }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ template "appname" . }}
+          servicePort: {{ .Values.service.internalPort }}
+  tls:
+  - hosts:
+    - {{ .Values.service.url }}
+    secretName: {{ .Values.service.ssl }}
+
+{{- end -}}

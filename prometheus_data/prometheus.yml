@@ -1,0 +1,8 @@
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 1s
+
+    static_configs:
+      - targets: ['localhost:3001']
+        labels:
+          service: 'my-socket'

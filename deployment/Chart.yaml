@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Message socket deploy chart
+name: deployment
+version: 0.1

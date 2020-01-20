@@ -1,0 +1,13 @@
+# Node Dependencies
+node_modules
+
+# Code coverage
+coverage
+.nyc_output
+
+# Lock file
+package-lock.json
+yarn.lock
+
+# Certificate
+nginx/certs/*

@@ -1,0 +1,183 @@
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: "tcp://localhost:2375"
+  PROJECT_NAME: messageServer
+
+services:
+  - docker:dind
+
+stages:
+  - test
+  - build
+  - deploy
+
+.common: &common |
+  set -eo pipefail
+
+    [[ "$TRACE" ]] && set -x
+
+    init_kube_config() {
+      echo "CI_ENVIRONMENT_NAME =  $CI_ENVIRONMENT_NAME"
+      if [ $CI_ENVIRONMENT_NAME == "production" ]; then
+        echo "set production host dns"
+        echo "$PRODUCTION_HOST $PRODUCTION_DOMAIN" > /etc/hosts
+        export KUBE_CONFIG=$KUBE_CONFIG_PRODUCTION
+      else
+        echo "set staging host dns"
+        echo "$STAGING_HOST $STAGING_DOMAIN" > /etc/hosts
+        export KUBE_CONFIG=$KUBE_CONFIG_STAGING
+      fi
+      cat /etc/hosts
+      mkdir -p $HOME/.kube
+      echo "initilize kube config"
+      echo ${KUBE_CONFIG} | base64 -d > $HOME/.kube/config
+    }
+
+    init_helm(){
+      echo "init helm"
+      helm ls
+      helm init --client-only
+      helm dependency update ./deployment
+      helm dependency build ./deployment
+    }
+
+    review_cluster() {
+      kubectl cluster-info
+      kubectl get pod -n ${KUBE_NAMESPACE}
+    }
+
+.init_kube: &init_kube |
+  init_kube_config
+  init_helm
+  review_cluster
+
+.registry: &registry |
+    login(){
+      echo "Logging to Gitlab Container Registry with CI credenticals..."
+      docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    }
+
+    build(){
+      docker build -t $CI_REGISTRY_IMAGE .
+      if [ $CI_ENVIRONMENT_NAME == "production" ]; then
+        export BUILD_TAG=$TAG; 
+      else
+       export BUILD_TAG=$CI_COMMIT_SHORT_SHA
+      fi
+      docker tag $CI_REGISTRY_IMAGE $CI_REGISTRY_IMAGE:$BUILD_TAG
+      echo "Pushing to Gitlab Container Registry..."
+      docker push $CI_REGISTRY_IMAGE:$BUILD_TAG
+    }
+
+    clean(){
+      echo "Removing unnecessary image on Gitlab Container Registry..."
+      docker rm $(docker ps -a -q -f ancestor=$CI_REGISTRY_NAME) 2>&1
+      docker rmi $(docker images | grep "^<none>" | awk "{print \$3}") 2>&1
+    }
+
+.deploy: &deploy |
+    RELEASE_NAME="socket-$CI_ENVIRONMENT_NAME"
+    echo "deploy $RELEASE_NAME to $CI_ENVIRONMENT_NAME environment"
+    helm upgrade $RELEASE_NAME ./deployment \
+      --install \
+      --values "deployment/$CI_ENVIRONMENT_NAME.yaml" \
+      --set image.tag=$CI_COMMIT_SHORT_SHA \
+      --namespace="$KUBE_NAMESPACE" \
+      --version="$CI_PIPELINE_ID-$CI_JOB_ID"
+
+eslint:
+  stage: test
+  image: harbor.zinza.com.vn/sysad/docker/js-linter:master
+  tags:
+    - main-docker
+  script:
+    - npm install eslint-plugin-chai-friendly@latest --save-dev
+    - eslint .
+
+mocha:
+  stage: test
+  image: node:8-alpine
+  services:
+    - mongo:4.2.0-bionic
+    - harbor.zinza.com.vn/sysad/docker/redis-ha-alpine
+    - harbor.zinza.com.vn/sync-service
+  tags:
+    - main-docker
+  variables:
+    MONGODB_URI: "mongodb://localhost/"
+
+  script:
+    - npm install yarn --global
+    - yarn install
+    - npm run coverage
+  coverage: '/^Lines\s*:\s*\d+.\d+\%/'
+  cache:
+    paths:
+      - node_modules
+    key: ${CI_JOB_NAME}
+  when: manual
+
+helm_test:
+  image: harbor.zinza.com.vn/sysad/docker/kube-tool:1.15.3
+  stage: test
+  script:
+    - helm lint --values "deployment/production.yaml" ./deployment
+    - helm lint --values "deployment/staging.yaml" ./deployment
+
+build_image:
+  stage: build
+  image: docker:latest
+  before_script:
+    - *registry
+  tags:
+    - main-docker
+  script:
+    - login
+    - build
+  only:
+    refs:
+      - review/*
+      - master
+      - release
+      - deploy/k8s
+  after_script:
+    - clean
+
+staging_deploy:
+  image: harbor.zinza.com.vn/sysad/docker/kube-tool:1.15.3
+  stage: deploy
+  before_script:
+    - *common
+  script:
+    - *init_kube
+    - *deploy
+  environment:
+    name: staging
+  only:
+    refs:
+      - review/*
+      - master
+      - release
+      - deploy/k8s
+  except:
+    variables:
+      - $STAGING_ENABLED
+
+production_deploy:
+  image: harbor.zinza.com.vn/sysad/docker/kube-tool:1.15.3
+  stage: deploy
+  before_script:
+    - *common
+  script:
+    - *init_kube
+    - *deploy
+  environment:
+    name: production
+  only:
+    refs:
+      - review/*
+      - master
+      - release
+  except:
+    variables:
+      - $STAGING_ENABLED
